@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="病人檢查記錄">
+<title>內視鏡 · 病人記錄</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f2ee;
+  --bg2: #ede9e3;
+  --surface: #ffffff;
+  --card: #fdfcfa;
+  --ink: #1a1612;
+  --ink2: #4a4540;
+  --ink3: #9a9390;
+  --rule: #e0dbd5;
+  --accent: #c8522a;
+  --accent-light: #f2e8e2;
+  --accent2: #2a7a5a;
+  --accent2-light: #e2f0eb;
+  --blue: #2a5a8a;
+  --blue-light: #e2ecf5;
+  --gold: #b08030;
+  --shadow-sm: 0 1px 3px rgba(26,22,18,0.08), 0 1px 2px rgba(26,22,18,0.06);
+  --shadow: 0 4px 16px rgba(26,22,18,0.1), 0 2px 4px rgba(26,22,18,0.08);
+  --shadow-lg: 0 12px 40px rgba(26,22,18,0.15), 0 4px 12px rgba(26,22,18,0.1);
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html { background: var(--bg); }
+
+body {
+  font-family: 'Noto Sans TC', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100dvh;
+  overscroll-behavior-y: none;
+}
+
+/* Subtle dot grid background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(26,22,18,0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app { position: relative; z-index: 1; max-width: 460px; margin: 0 auto; padding-bottom: 130px; }
+
+/* ── HEADER ── */
+header {
+  background: var(--ink);
+  padding: 18px 20px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-date {
+  font-size: 22px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -0.03em;
+}
+
+.header-btns { display: flex; gap: 8px; }
+
+.hbtn {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  color: rgba(255,255,255,0.8);
+  font-size: 14px;
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.hbtn:active { background: rgba(255,255,255,0.2); transform: scale(0.92); }
+
+/* ── SUMMARY STRIP ── */
+.summary-strip {
+  background: var(--ink);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 10px 16px 16px;
+  gap: 4px;
+}
+
+.sum-cell { text-align: center; }
+.sum-lbl {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+  font-weight: 500;
+}
+.sum-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+  margin-top: 1px;
+}
+.sum-val.hi { color: #f2c97a; }
+
+/* ── INSTALL HINT ── */
+.install-hint {
+  margin: 12px 16px 0;
+  background: var(--blue-light);
+  border: 1px solid rgba(42,90,138,0.2);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 11px;
+  color: var(--blue);
+  line-height: 1.6;
+  text-align: center;
+}
+.install-hint strong { font-weight: 700; }
+
+/* ── PATIENT LIST HEADER ── */
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 18px 8px;
+}
+.section-title {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  font-weight: 600;
+}
+.btn-add-patient {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-family: 'Noto Sans TC', sans-serif;
+  display: flex; align-items: center; gap: 4px;
+  transition: opacity 0.15s, transform 0.1s;
+  letter-spacing: 0.02em;
+}
+.btn-add-patient:active { opacity: 0.85; transform: scale(0.95); }
+
+/* ── PATIENT CARDS ── */
+.patients-list { padding: 0 14px; display: flex; flex-direction: column; gap: 12px; }
+
+.patient-card {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+.patient-card.expanded { box-shadow: var(--shadow); }
+
+.patient-header {
+  display: flex;
+  align-items: center;
+  padding: 13px 14px;
+  cursor: pointer;
+  gap: 10px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.patient-num {
+  width: 30px; height: 30px;
+  background: var(--bg2);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink2);
+  flex-shrink: 0;
+}
+.patient-card.expanded .patient-num {
+  background: var(--accent);
+  color: #fff;
+}
+
+.patient-info { flex: 1; min-width: 0; }
+.patient-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.patient-meta {
+  font-size: 11px;
+  color: var(--ink3);
+  margin-top: 1px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.patient-meta.has-data { color: var(--accent2); font-weight: 600; }
+
+.patient-chevron {
+  font-size: 12px;
+  color: var(--ink3);
+  transition: transform 0.25s;
+  flex-shrink: 0;
+}
+.patient-card.expanded .patient-chevron { transform: rotate(180deg); }
+
+.patient-delete {
+  width: 28px; height: 28px;
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.patient-delete:active { background: #fee2e2; border-color: #fca5a5; }
+
+/* ── PROCEDURES PANEL ── */
+.procedures-panel {
+  display: none;
+  border-top: 1px solid var(--rule);
+  background: var(--card);
+}
+.patient-card.expanded .procedures-panel { display: block; }
+
+.proc-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--rule);
+  gap: 10px;
+}
+.proc-row:last-child { border-bottom: none; }
+
+.proc-icon {
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.proc-body { flex: 1; min-width: 0; }
+.proc-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.2;
+}
+.proc-unit {
+  font-size: 11px;
+  color: var(--ink3);
+  font-family: 'JetBrains Mono', monospace;
+  margin-top: 1px;
+}
+
+/* Counter */
+.counter {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1.5px solid var(--rule);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg);
+  flex-shrink: 0;
+}
+
+.c-btn {
+  width: 36px; height: 36px;
+  border: none; background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--ink3);
+  cursor: pointer;
+  transition: all 0.12s;
+  user-select: none; -webkit-user-select: none;
+}
+.c-btn:active { background: var(--bg2); transform: scale(0.85); }
+.c-btn.minus:active { color: var(--accent); }
+.c-btn.plus:active { color: var(--accent2); }
+
+.c-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  font-weight: 600;
+  min-width: 30px;
+  text-align: center;
+  color: var(--ink2);
+  transition: color 0.15s;
+}
+.c-val.active { color: var(--accent); }
+
+/* Subtotal right */
+.proc-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 50px;
+  text-align: right;
+  color: var(--ink3);
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+.proc-sub.active { color: var(--accent2); }
+
+/* Patient subtotal row */
+.patient-subtotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--ink);
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+.psub-label { font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 0.08em; text-transform: uppercase; }
+.psub-amount {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  font-weight: 600;
+  color: #f2c97a;
+}
+
+/* ── BOTTOM BAR ── */
+.bottom-bar {
+  position: fixed;
+  bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 460px;
+  background: var(--ink);
+  padding: 14px 20px calc(14px + env(safe-area-inset-bottom));
+  z-index: 100;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.bottom-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.bottom-label { font-size: 10px; letter-spacing: 0.12em; color: rgba(255,255,255,0.35); text-transform: uppercase; }
+.bottom-sub { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 2px; }
+.bottom-total {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 30px;
+  font-weight: 600;
+  color: #f2c97a;
+  letter-spacing: -0.03em;
+}
+
+/* ── MODALS ── */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(26,22,18,0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 200;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s;
+}
+.overlay.open { opacity: 1; pointer-events: all; }
+
+.sheet {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: var(--surface);
+  border-radius: 22px 22px 0 0;
+  padding: 0 0 calc(20px + env(safe-area-inset-bottom));
+  transform: translateY(100%);
+  transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+  max-height: 85dvh;
+  overflow-y: auto;
+}
+.overlay.open .sheet { transform: translateY(0); }
+
+.sheet-handle {
+  width: 36px; height: 4px;
+  background: var(--rule);
+  border-radius: 2px;
+  margin: 14px auto 0;
+}
+
+.sheet-title {
+  font-size: 17px; font-weight: 800;
+  padding: 14px 20px 14px;
+  border-bottom: 1px solid var(--rule);
+  letter-spacing: -0.02em;
+}
+
+/* New patient form */
+.form-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
+
+.field-label { font-size: 11px; font-weight: 700; color: var(--ink3); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+
+.field-input {
+  width: 100%;
+  background: var(--bg);
+  border: 1.5px solid var(--rule);
+  border-radius: 12px;
+  color: var(--ink);
+  font-size: 16px;
+  padding: 12px 14px;
+  outline: none;
+  font-family: 'Noto Sans TC', sans-serif;
+  transition: border-color 0.15s;
+}
+.field-input:focus { border-color: var(--accent); }
+
+.btn-confirm {
+  width: 100%;
+  background: var(--accent);
+  border: none; border-radius: 12px;
+  color: #fff; font-size: 15px; font-weight: 800;
+  padding: 14px;
+  cursor: pointer;
+  font-family: 'Noto Sans TC', sans-serif;
+  letter-spacing: 0.04em;
+  transition: opacity 0.15s;
+}
+.btn-confirm:active { opacity: 0.85; }
+
+/* History sheet */
+.hist-day {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--rule);
+  cursor: pointer;
+}
+.hist-day:active { background: var(--bg); }
+.hist-day-top { display: flex; justify-content: space-between; align-items: center; }
+.hist-date { font-size: 14px; font-weight: 700; color: var(--ink); }
+.hist-total { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600; color: var(--accent2); }
+.hist-patients {
+  margin-top: 6px;
+  display: flex; flex-wrap: wrap; gap: 5px;
+}
+.hist-chip {
+  background: var(--bg2);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px; color: var(--ink2);
+}
+.empty-msg { padding: 48px 20px; text-align: center; color: var(--ink3); font-size: 14px; }
+
+/* Save toast */
+.toast {
+  position: fixed;
+  top: 90px; left: 50%;
+  transform: translateX(-50%) translateY(-10px);
+  background: var(--accent2);
+  color: #fff;
+  font-size: 12px; font-weight: 700;
+  padding: 7px 20px;
+  border-radius: 20px;
+  opacity: 0; pointer-events: none;
+  transition: all 0.28s;
+  z-index: 300;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  box-shadow: var(--shadow);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Proc icon colors */
+.icon-orange { background: #fef3ee; }
+.icon-blue   { background: #eef3fe; }
+.icon-teal   { background: #eefaf5; }
+.icon-gray   { background: var(--bg2); }
+.icon-red    { background: #fef2f2; }
+.icon-purple { background: #f5f2fe; }
+.icon-amber  { background: #fef9ee; }
+
+/* Empty state */
+.empty-patients {
+  text-align: center;
+  padding: 40px 30px;
+  color: var(--ink3);
+}
+.empty-patients .big-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-patients p { font-size: 14px; line-height: 1.6; }
+.empty-patients strong { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast">✓ 已儲存</div>
+
+<div class="app">
+  <header>
+    <div class="header-eyebrow">內視鏡中心 · 病人記錄</div>
+    <div class="header-row">
+      <div class="header-date" id="headerDate">載入中...</div>
+      <div class="header-btns">
+        <div class="hbtn" onclick="openHistory()" title="歷史">📋</div>
+        <div class="hbtn" onclick="confirmReset()" title="重置今日">🔄</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="summary-strip">
+    <div class="sum-cell">
+      <div class="sum-lbl">病人數</div>
+      <div class="sum-val" id="sumPatients">0</div>
+    </div>
+    <div class="sum-cell">
+      <div class="sum-lbl">總項次</div>
+      <div class="sum-val" id="sumItems">0</div>
+    </div>
+    <div class="sum-cell">
+      <div class="sum-lbl">總金額</div>
+      <div class="sum-val hi" id="sumTotal">$0</div>
+    </div>
+  </div>
+
+  <div class="install-hint">
+    📱 <strong>加入主畫面</strong>：Safari → 分享 → 加入主畫面 → 像 App 使用，資料自動儲存
+  </div>
+
+  <div class="section-head">
+    <div class="section-title">今日病人</div>
+    <button class="btn-add-patient" onclick="openAddPatient()">＋ 新增病人</button>
+  </div>
+
+  <div class="patients-list" id="patientsList"></div>
+</div>
+
+<!-- Bottom total bar -->
+<div class="bottom-bar">
+  <div class="bottom-row">
+    <div>
+      <div class="bottom-label">今日總計</div>
+      <div class="bottom-sub" id="bottomSub">0 位病人</div>
+    </div>
+    <div class="bottom-total" id="bottomTotal">$0</div>
+  </div>
+</div>
+
+<!-- Add Patient Modal -->
+<div class="overlay" id="addPatientOverlay" onclick="closeOverlayBg(event,'addPatientOverlay')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">新增病人</div>
+    <div class="form-body">
+      <div>
+        <div class="field-label">病人姓名 / 病歷號</div>
+        <input class="field-input" type="text" id="patientNameInput" placeholder="例：王小明 或 #00123" maxlength="30" autocomplete="off">
+      </div>
+      <button class="btn-confirm" onclick="confirmAddPatient()">新增病人</button>
+    </div>
+  </div>
+</div>
+
+<!-- History Modal -->
+<div class="overlay" id="historyOverlay" onclick="closeOverlayBg(event,'historyOverlay')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">歷史紀錄</div>
+    <div id="historyContent"></div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────
+const PROCS = [
+  { id:'gc',  name:'胃加腸鏡',     price:1400, icon:'🔭', cls:'icon-orange' },
+  { id:'g',   name:'胃鏡',         price:500,  icon:'🔬', cls:'icon-blue'   },
+  { id:'c',   name:'腸鏡',         price:800,  icon:'🔬', cls:'icon-teal'   },
+  { id:'clo', name:'CLO',          price:50,   icon:'🧪', cls:'icon-gray'   },
+  { id:'gbx', name:'胃切片',       price:100,  icon:'✂️', cls:'icon-red'    },
+  { id:'gcs', name:'胃 Cold Snare',price:700,  icon:'❄️', cls:'icon-purple' },
+  { id:'cbx', name:'腸切片',       price:100,  icon:'✂️', cls:'icon-red'    },
+  { id:'ccs', name:'腸 Cold Snare',price:700,  icon:'❄️', cls:'icon-purple' },
+  { id:'us',  name:'腹部超音波',   price:200,  icon:'📡', cls:'icon-amber'  },
+];
+
+const STORE_KEY = 'endo_patients_v1';
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { today: todayStr(), patients: [], history: [] };
+}
+
+function saveData() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(data)); } catch(e) {}
+  showToast('已儲存');
+}
+
+let data = loadData();
+let expandedIdx = null;
+
+// ── AUTO ARCHIVE ON NEW DAY ───────────────────────────
+function checkNewDay() {
+  const today = todayStr();
+  if (data.today !== today) {
+    const hasData = data.patients.some(p =>
+      PROCS.some(proc => (p.counts[proc.id] || 0) > 0)
+    );
+    if (hasData || data.patients.length > 0) {
+      data.history.unshift({ date: data.today, patients: JSON.parse(JSON.stringify(data.patients)) });
+      if (data.history.length > 90) data.history.pop();
+    }
+    data.today = today;
+    data.patients = [];
+    expandedIdx = null;
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(data)); } catch(e) {}
+  }
+}
+
+// ── CALC ──────────────────────────────────────────────
+function patientTotal(p) {
+  return PROCS.reduce((s, proc) => s + (p.counts[proc.id] || 0) * proc.price, 0);
+}
+
+function patientItems(p) {
+  return PROCS.reduce((s, proc) => s + (p.counts[proc.id] || 0), 0);
+}
+
+function dayTotals() {
+  let patients = 0, items = 0, money = 0;
+  data.patients.forEach(p => {
+    const t = patientTotal(p);
+    if (t > 0 || patientItems(p) > 0) patients++;
+    items += patientItems(p);
+    money += t;
+  });
+  return { patients, items, money };
+}
+
+// ── RENDER ────────────────────────────────────────────
+function renderAll() {
+  renderDate();
+  renderPatients();
+  renderSummary();
+}
+
+function renderDate() {
+  const d = new Date();
+  const days = ['日','一','二','三','四','五','六'];
+  document.getElementById('headerDate').textContent =
+    `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（週${days[d.getDay()]}）`;
+}
+
+function renderSummary() {
+  const { patients, items, money } = dayTotals();
+  document.getElementById('sumPatients').textContent = data.patients.length;
+  document.getElementById('sumItems').textContent = items;
+  document.getElementById('sumTotal').textContent = '$' + money.toLocaleString();
+  document.getElementById('bottomTotal').textContent = '$' + money.toLocaleString();
+  document.getElementById('bottomSub').textContent = `${data.patients.length} 位病人`;
+}
+
+function renderPatients() {
+  const container = document.getElementById('patientsList');
+
+  if (data.patients.length === 0) {
+    container.innerHTML = `
+      <div class="empty-patients">
+        <div class="big-icon">🏥</div>
+        <p>尚未新增病人<br>點右上角 <strong>＋ 新增病人</strong> 開始記錄</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = '';
+  data.patients.forEach((p, idx) => {
+    const isExpanded = expandedIdx === idx;
+    const total = patientTotal(p);
+    const items = patientItems(p);
+
+    const card = document.createElement('div');
+    card.className = 'patient-card' + (isExpanded ? ' expanded' : '');
+    card.dataset.idx = idx;
+
+    // Header
+    const headerHtml = `
+      <div class="patient-header" onclick="toggleExpand(${idx})">
+        <div class="patient-num">${idx + 1}</div>
+        <div class="patient-info">
+          <div class="patient-name">${escHtml(p.name)}</div>
+          <div class="patient-meta ${items > 0 ? 'has-data' : ''}">
+            ${items > 0 ? `${items} 項 · $${total.toLocaleString()}` : '尚未輸入'}
+          </div>
+        </div>
+        <button class="patient-delete" onclick="deletePatient(event,${idx})">🗑</button>
+        <div class="patient-chevron">▼</div>
+      </div>`;
+
+    // Procedures panel
+    let procsHtml = '<div class="procedures-panel">';
+    PROCS.forEach(proc => {
+      const cnt = p.counts[proc.id] || 0;
+      const sub = cnt * proc.price;
+      procsHtml += `
+        <div class="proc-row" id="row_${idx}_${proc.id}">
+          <div class="proc-icon ${proc.cls}">${proc.icon}</div>
+          <div class="proc-body">
+            <div class="proc-name">${proc.name}</div>
+            <div class="proc-unit">$${proc.price.toLocaleString()} / 次</div>
+          </div>
+          <div class="counter">
+            <button class="c-btn minus" onclick="change(${idx},'${proc.id}',-1)">−</button>
+            <div class="c-val ${cnt > 0 ? 'active' : ''}" id="cv_${idx}_${proc.id}">${cnt}</div>
+            <button class="c-btn plus" onclick="change(${idx},'${proc.id}',1)">+</button>
+          </div>
+          <div class="proc-sub ${cnt > 0 ? 'active' : ''}" id="ps_${idx}_${proc.id}">
+            ${cnt > 0 ? '$' + sub.toLocaleString() : '—'}
+          </div>
+        </div>`;
+    });
+    procsHtml += `
+      <div class="patient-subtotal">
+        <div class="psub-label">本人小計</div>
+        <div class="psub-amount" id="ptotal_${idx}">$${total.toLocaleString()}</div>
+      </div>
+    </div>`;
+
+    card.innerHTML = headerHtml + procsHtml;
+    container.appendChild(card);
+  });
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── INTERACTIONS ──────────────────────────────────────
+function toggleExpand(idx) {
+  expandedIdx = expandedIdx === idx ? null : idx;
+  renderPatients();
+  renderSummary();
+  // Scroll card into view
+  setTimeout(() => {
+    const cards = document.querySelectorAll('.patient-card');
+    if (cards[idx]) cards[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 50);
+}
+
+function change(patIdx, procId, delta) {
+  const p = data.patients[patIdx];
+  if (!p) return;
+  const cur = p.counts[procId] || 0;
+  const next = Math.max(0, cur + delta);
+  p.counts[procId] = next;
+
+  // Fast DOM update
+  const cvEl = document.getElementById(`cv_${patIdx}_${procId}`);
+  const psEl = document.getElementById(`ps_${patIdx}_${procId}`);
+  const ptEl = document.getElementById(`ptotal_${patIdx}`);
+  const proc = PROCS.find(x => x.id === procId);
+
+  if (cvEl) {
+    cvEl.textContent = next;
+    cvEl.className = 'c-val' + (next > 0 ? ' active' : '');
+  }
+  if (psEl) {
+    const sub = next * proc.price;
+    psEl.textContent = next > 0 ? '$' + sub.toLocaleString() : '—';
+    psEl.className = 'proc-sub' + (next > 0 ? ' active' : '');
+  }
+  if (ptEl) {
+    ptEl.textContent = '$' + patientTotal(p).toLocaleString();
+  }
+
+  // Update patient meta in header
+  const card = document.querySelector(`.patient-card[data-idx="${patIdx}"]`);
+  if (card) {
+    const metaEl = card.querySelector('.patient-meta');
+    const items = patientItems(p);
+    const total = patientTotal(p);
+    metaEl.textContent = items > 0 ? `${items} 項 · $${total.toLocaleString()}` : '尚未輸入';
+    metaEl.className = 'patient-meta' + (items > 0 ? ' has-data' : '');
+  }
+
+  renderSummary();
+  saveData();
+}
+
+function deletePatient(e, idx) {
+  e.stopPropagation();
+  const p = data.patients[idx];
+  if (!confirm(`刪除病人「${p.name}」的所有記錄？`)) return;
+  data.patients.splice(idx, 1);
+  if (expandedIdx === idx) expandedIdx = null;
+  else if (expandedIdx > idx) expandedIdx--;
+  saveData();
+  renderAll();
+}
+
+function confirmReset() {
+  if (data.patients.length === 0) return;
+  if (!confirm('清除今日所有病人記錄？（資料將存入歷史）')) return;
+  const hasData = data.patients.some(p => patientItems(p) > 0);
+  if (hasData) {
+    data.history.unshift({ date: data.today, patients: JSON.parse(JSON.stringify(data.patients)) });
+    if (data.history.length > 90) data.history.pop();
+  }
+  data.patients = [];
+  expandedIdx = null;
+  saveData();
+  renderAll();
+}
+
+// ── ADD PATIENT ───────────────────────────────────────
+function openAddPatient() {
+  document.getElementById('patientNameInput').value = '';
+  document.getElementById('addPatientOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('patientNameInput').focus(), 350);
+}
+
+function confirmAddPatient() {
+  const name = document.getElementById('patientNameInput').value.trim();
+  if (!name) {
+    document.getElementById('patientNameInput').focus();
+    return;
+  }
+  data.patients.push({ name, counts: {} });
+  expandedIdx = data.patients.length - 1; // auto-expand new patient
+  document.getElementById('addPatientOverlay').classList.remove('open');
+  saveData();
+  renderAll();
+  // Scroll to new patient
+  setTimeout(() => {
+    const cards = document.querySelectorAll('.patient-card');
+    if (cards[expandedIdx]) cards[expandedIdx].scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
+}
+
+document.getElementById('patientNameInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') confirmAddPatient();
+});
+
+// ── HISTORY ───────────────────────────────────────────
+function openHistory() {
+  const content = document.getElementById('historyContent');
+  content.innerHTML = '';
+
+  if (data.history.length === 0) {
+    content.innerHTML = '<div class="empty-msg">尚無歷史紀錄<br><span style="font-size:11px;color:var(--ink3)">每天資料會自動存入</span></div>';
+  } else {
+    data.history.forEach(day => {
+      const dayMoney = day.patients.reduce((s, p) =>
+        s + PROCS.reduce((ss, proc) => ss + (p.counts[proc.id] || 0) * proc.price, 0), 0);
+      const el = document.createElement('div');
+      el.className = 'hist-day';
+      const chips = day.patients.map(p => {
+        const t = PROCS.reduce((s, proc) => s + (p.counts[proc.id]||0)*proc.price, 0);
+        return `<span class="hist-chip">${escHtml(p.name)}${t > 0 ? ' $'+t.toLocaleString() : ''}</span>`;
+      }).join('');
+      el.innerHTML = `
+        <div class="hist-day-top">
+          <div class="hist-date">📅 ${day.date}</div>
+          <div class="hist-total">$${dayMoney.toLocaleString()}</div>
+        </div>
+        <div class="hist-patients">
+          ${chips || '<span style="color:var(--ink3);font-size:11px">無資料</span>'}
+        </div>`;
+      content.appendChild(el);
+    });
+  }
+  document.getElementById('historyOverlay').classList.add('open');
+}
+
+// ── OVERLAY CLOSE ─────────────────────────────────────
+function closeOverlayBg(e, id) {
+  if (e.target === document.getElementById(id)) {
+    document.getElementById(id).classList.remove('open');
+  }
+}
+
+// ── TOAST ─────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = '✓ ' + msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// ── INIT ──────────────────────────────────────────────
+checkNewDay();
+renderAll();
+setInterval(checkNewDay, 60000);
+</script>
+</body>
+</html>
